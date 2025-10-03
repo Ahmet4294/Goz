@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Göz Egzersizi – Takip Uygulaması</title>
+    <style>
+      :root {
+        --bg: #0e0f12;
+        --panel: #16181d;
+        --text: #e8eaed;
+        --muted: #9aa0a6;
+        --accent: #8ab4f8;
+        --accent-2: #7ef0ce;
+        --danger: #ff6b6b;
+        --ok: #7ee787;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu,
+          "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji",
+          "Segoe UI Emoji";
+      }
+      .app {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+      header {
+        padding: 10px 16px;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.04),
+          transparent
+        );
+        border-bottom: 1px solid #22252b;
+      }
+      header h1 {
+        font-size: 16px;
+        margin: 0;
+        font-weight: 600;
+        letter-spacing: 0.2px;
+      }
+      .badge {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .panel {
+        display: grid;
+        gap: 10px;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        padding: 12px;
+        background: var(--panel);
+        border-bottom: 1px solid #22252b;
+      }
+      .control {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        background: #0f1115;
+        border: 1px solid #22252b;
+        border-radius: 10px;
+        padding: 10px;
+      }
+      .control label {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      select,
+      input[type="range"],
+      input[type="number"],
+      input[type="color"] {
+        width: 100%;
+        padding: 8px;
+        border-radius: 8px;
+        border: 1px solid #2a2e35;
+        background: #0b0d11;
+        color: var(--text);
+      }
+      .row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .row > * {
+        flex: 1;
+      }
+      .buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      button {
+        border: 1px solid #2a2e35;
+        background: #11141a;
+        color: var(--text);
+        padding: 10px 14px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+      }
+      button:hover {
+        border-color: #3a404a;
+      }
+      .primary {
+        background: linear-gradient(180deg, #1a2636, #121a26);
+        border-color: #2a3a52;
+      }
+      .success {
+        border-color: #294b36;
+        background: linear-gradient(180deg, #1b2a22, #111a15);
+      }
+      .warn {
+        border-color: #50342d;
+        background: linear-gradient(180deg, #2a1c18, #1a1311);
+      }
+      .canvas-wrap {
+        position: relative;
+        flex: 1;
+        min-height: 280px;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      .statusbar {
+        position: absolute;
+        left: 10px;
+        bottom: 10px;
+        background: rgba(0, 0, 0, 0.45);
+        backdrop-filter: blur(6px);
+        padding: 6px 10px;
+        border-radius: 10px;
+        font-size: 12px;
+        color: #d0d6dc;
+      }
+      .pill {
+        padding: 2px 8px;
+        border-radius: 999px;
+        border: 1px solid #2a2e35;
+        margin-right: 6px;
+      }
+      .pill.green {
+        border-color: #2c5a3f;
+        color: var(--ok);
+      }
+      .pill.red {
+        border-color: #5a2c2c;
+        color: var(--danger);
+      }
+      footer {
+        padding: 10px 14px;
+        font-size: 12px;
+        color: var(--muted);
+        border-top: 1px solid #22252b;
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .kbd {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+          "Liberation Mono", "Courier New", monospace;
+        font-size: 12px;
+        padding: 2px 6px;
+        border: 1px solid #3a404a;
+        border-bottom-width: 2px;
+        border-radius: 6px;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          scroll-behavior: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <header>
+        <h1>Göz Egzersizi – Takip Uygulaması</h1>
+        <span class="badge">v1.0</span>
+      </header>
+
+      <section class="panel" aria-label="Ayarlar">
+        <div class="control">
+          <label for="pattern">Desen</label>
+          <select id="pattern">
+            <option value="horizontal">Yatay (sağ–sol)</option>
+            <option value="vertical">Dikey (yukarı–aşağı)</option>
+            <option value="diagonal">Çapraz (45°)</option>
+            <option value="circle">Daire</option>
+            <option value="eight">Sonsuz (∞)</option>
+            <option value="random">Yumuşak rastgele</option>
+          </select>
+        </div>
+
+        <div class="control">
+          <label for="speed">Hız <span id="speedVal"></span></label>
+          <input
+            id="speed"
+            type="range"
+            min="0.2"
+            max="4"
+            value="1.2"
+            step="0.1"
+          />
+          <div class="row">
+            <label for="amplitude">Genlik (alan)</label>
+            <input
+              id="amplitude"
+              type="range"
+              min="0.15"
+              max="0.48"
+              value="0.35"
+              step="0.01"
+            />
+          </div>
+        </div>
+
+        <div class="control">
+          <label for="size">Nokta boyutu <span id="sizeVal"></span></label>
+          <input id="size" type="range" min="6" max="40" value="18" step="1" />
+          <div class="row">
+            <div>
+              <label for="dotColor">Nokta rengi</label>
+              <input id="dotColor" type="color" value="#7ef0ce" />
+            </div>
+            <div>
+              <label for="bgColor">Arka plan</label>
+              <input id="bgColor" type="color" value="#0e0f12" />
+            </div>
+          </div>
+        </div>
+
+        <div class="control">
+          <label>Seans</label>
+          <div class="row">
+            <div>
+              <label for="workSec">Çalış (sn)</label>
+              <input id="workSec" type="number" min="10" max="900" value="60" />
+            </div>
+            <div>
+              <label for="restSec">Dinlen (sn)</label>
+              <input id="restSec" type="number" min="5" max="300" value="15" />
+            </div>
+          </div>
+          <div class="row">
+            <div>
+              <label for="loops">Tur sayısı</label>
+              <input id="loops" type="number" min="1" max="20" value="3" />
+            </div>
+            <div class="row" style="flex: 1">
+              <input type="checkbox" id="beep" checked />
+              <label for="beep" style="margin: 0">Dinlenişte bip</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="control">
+          <label>Kontroller</label>
+          <div class="buttons">
+            <button class="primary" id="startBtn">Başlat</button>
+            <button id="pauseBtn">Durdur / Devam (␣)</button>
+            <button id="resetBtn">Sıfırla</button>
+            <button class="success" id="fullscreenBtn">Tam Ekran (F)</button>
+            <button class="warn" id="centerBtn">Merkeze Al</button>
+          </div>
+          <small class="muted"
+            >Kısayollar: <span class="kbd">Enter</span> Başlat/Durdur ·
+            <span class="kbd">F</span> Tam ekran ·
+            <span class="kbd">R</span> Sıfırla</small
+          >
+        </div>
+      </section>
+
+      <div class="canvas-wrap">
+        <canvas id="stage" aria-label="Egzersiz alanı"></canvas>
+        <div class="statusbar" id="status">
+          <span class="pill" id="phasePill">Hazır</span>
+          Kalan: <strong id="countdown">00:00</strong> · Tur:
+          <strong id="lap">0</strong>
+        </div>
+      </div>
+
+      <footer>
+        <div>
+          İpucu: Gözlerinizi yalnızca noktayla hareket ettirin; başınızı sabit
+          tutmaya çalışın. Rahatsızlık olursa hemen durun.
+        </div>
+        <div>
+          Not: Bu araç tıbbi tavsiye değildir. 20-20-20 kuralını uygulayın.
+        </div>
+      </footer>
+    </div>
+
+    <script>
+      (() => {
+        // Elements
+        const canvas = document.getElementById("stage");
+        const ctx = canvas.getContext("2d");
+        const patternEl = document.getElementById("pattern");
+        const speedEl = document.getElementById("speed");
+        const speedValEl = document.getElementById("speedVal");
+        const ampEl = document.getElementById("amplitude");
+        const sizeEl = document.getElementById("size");
+        const sizeValEl = document.getElementById("sizeVal");
+        const dotColorEl = document.getElementById("dotColor");
+        const bgColorEl = document.getElementById("bgColor");
+        const workSecEl = document.getElementById("workSec");
+        const restSecEl = document.getElementById("restSec");
+        const loopsEl = document.getElementById("loops");
+        const beepEl = document.getElementById("beep");
+
+        const startBtn = document.getElementById("startBtn");
+        const pauseBtn = document.getElementById("pauseBtn");
+        const resetBtn = document.getElementById("resetBtn");
+        const fullscreenBtn = document.getElementById("fullscreenBtn");
+        const centerBtn = document.getElementById("centerBtn");
+
+        const phasePill = document.getElementById("phasePill");
+        const countdownEl = document.getElementById("countdown");
+        const lapEl = document.getElementById("lap");
+
+        // State
+        let W = 0,
+          H = 0,
+          cx = 0,
+          cy = 0;
+        let running = false,
+          rafId = null;
+        let t0 = 0,
+          t = 0; // seconds
+        let phase = "idle"; // 'work' | 'rest' | 'idle'
+        let remaining = 0; // seconds
+        let lap = 0,
+          targetLap = Number(loopsEl.value);
+        let randomTarget = null,
+          randomStart = null,
+          randomDur = 2;
+
+        // Accessibility: reflect slider values
+        function fmt(v, unit = "x") {
+          return v.toFixed(1) + (unit || "");
+        }
+        function updateLabels() {
+          speedValEl.textContent = fmt(Number(speedEl.value), "×");
+          sizeValEl.textContent = Math.round(Number(sizeEl.value)) + " px";
+        }
+        updateLabels();
+        speedEl.addEventListener("input", updateLabels);
+        sizeEl.addEventListener("input", updateLabels);
+
+        // Resize canvas to CSS pixels while preserving crispness
+        function resize() {
+          const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+          const rect = canvas.getBoundingClientRect();
+          W = Math.max(200, Math.floor(rect.width));
+          H = Math.max(200, Math.floor(rect.height));
+          canvas.width = Math.floor(W * dpr);
+          canvas.height = Math.floor(H * dpr);
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          cx = W / 2;
+          cy = H / 2;
+        }
+        window.addEventListener("resize", resize, { passive: true });
+        resize();
+
+        // Beep for rest phase (simple oscillator)
+        const beeper = {
+          ctx: null,
+          init() {
+            if (this.ctx) return;
+            try {
+              this.ctx = new (window.AudioContext ||
+                window.webkitAudioContext)();
+            } catch (e) {
+              /* audio not available */
+            }
+          },
+          beep(duration = 0.15, freq = 880) {
+            if (!this.ctx) return;
+            const t = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.frequency.value = freq;
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            gain.gain.setValueAtTime(0.0001, t);
+            gain.gain.exponentialRampToValueAtTime(0.2, t + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+            osc.start(t);
+            osc.stop(t + duration + 0.01);
+          },
+        };
+
+        // Helpers
+        function clamp(v, a, b) {
+          return Math.max(a, Math.min(b, v));
+        }
+        function smoothstep(x) {
+          return x * x * (3 - 2 * x);
+        }
+
+        function newRandomTarget() {
+          const A = Number(ampEl.value);
+          const margin = 20 + Number(sizeEl.value);
+          const rx = W * A;
+          const ry = H * A;
+          const x = clamp(
+            cx + (Math.random() * 2 - 1) * rx,
+            margin,
+            W - margin
+          );
+          const y = clamp(
+            cy + (Math.random() * 2 - 1) * ry,
+            margin,
+            H - margin
+          );
+          randomStart = { x: currentPos.x, y: currentPos.y };
+          randomTarget = { x, y };
+          randomDur = 1.2 + 3 * (1 / Number(speedEl.value)); // faster speed => shorter duration
+          randomElapsed = 0;
+        }
+
+        // Animation core
+        let currentPos = { x: 0, y: 0 };
+        function computePosition(time) {
+          const pat = patternEl.value;
+          const speed = Number(speedEl.value); // multiplier
+          const omega = (speed * 2 * Math.PI) / 2.5; // base period ~2.5s (scaled)
+          const A = Number(ampEl.value);
+          const ax = W * A * 0.9;
+          const ay = H * A * 0.9;
+
+          if (pat === "horizontal") {
+            return { x: cx + ax * Math.sin(omega * time), y: cy };
+          }
+          if (pat === "vertical") {
+            return { x: cx, y: cy + ay * Math.sin(omega * time) };
+          }
+          if (pat === "diagonal") {
+            const v = Math.sin(omega * time);
+            return { x: cx + ax * v * 0.7, y: cy + ay * v * 0.7 };
+          }
+          if (pat === "circle") {
+            return {
+              x: cx + ax * 0.55 * Math.cos(omega * time),
+              y: cy + ay * 0.55 * Math.sin(omega * time),
+            };
+          }
+          if (pat === "eight") {
+            // Lemniscate-ish
+            const s = Math.sin(omega * time),
+              c = Math.cos(omega * time);
+            return { x: cx + ax * 0.5 * s, y: cy + ay * 0.35 * s * c };
+          }
+          if (pat === "random") {
+            // Smoothly interpolate between random targets
+            if (!randomTarget) {
+              currentPos.x = cx;
+              currentPos.y = cy;
+              newRandomTarget();
+            }
+            randomElapsed += dt;
+            let u = clamp(randomElapsed / randomDur, 0, 1);
+            u = smoothstep(u);
+            const x = randomStart.x + (randomTarget.x - randomStart.x) * u;
+            const y = randomStart.y + (randomTarget.y - randomStart.y) * u;
+            if (randomElapsed >= randomDur) {
+              newRandomTarget();
+            }
+            return { x, y };
+          }
+          return { x: cx, y: cy };
+        }
+
+        // Draw
+        function drawBackground() {
+          ctx.fillStyle = bgColorEl.value;
+          ctx.fillRect(0, 0, W, H);
+
+          // Gentle crosshair guides (low contrast)
+          ctx.globalAlpha = 0.08;
+          ctx.strokeStyle = "#ffffff";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(cx, 0);
+          ctx.lineTo(cx, H);
+          ctx.moveTo(0, cy);
+          ctx.lineTo(W, cy);
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+        }
+
+        function drawDot(x, y) {
+          const r = Number(sizeEl.value);
+          // Outer glow
+          ctx.beginPath();
+          ctx.arc(x, y, r * 1.7, 0, Math.PI * 2);
+          ctx.fillStyle = hexWithAlpha(dotColorEl.value, 0.15);
+          ctx.fill();
+          // Core
+          ctx.beginPath();
+          ctx.arc(x, y, r, 0, Math.PI * 2);
+          ctx.fillStyle = dotColorEl.value;
+          ctx.fill();
+          // Focus ring
+          ctx.lineWidth = Math.max(1, r * 0.12);
+          ctx.strokeStyle = "#00000033";
+          ctx.stroke();
+        }
+
+        function hexWithAlpha(hex, a) {
+          // hex like #rrggbb
+          const v = hex.replace("#", "");
+          const r = parseInt(v.substring(0, 2), 16);
+          const g = parseInt(v.substring(2, 4), 16);
+          const b = parseInt(v.substring(4, 6), 16);
+          return `rgba(${r},${g},${b},${a})`;
+        }
+
+        // Timer / phases
+        function setPhase(p) {
+          phase = p;
+          phasePill.textContent =
+            p === "work" ? "Çalış" : p === "rest" ? "Dinlen" : "Hazır";
+          phasePill.classList.toggle("green", p === "work");
+          phasePill.classList.toggle("red", p === "rest");
+        }
+        function formatClock(s) {
+          s = Math.max(0, Math.round(s));
+          const m = Math.floor(s / 60);
+          const sec = s % 60;
+          return `${String(m).padStart(2, "0")}:${String(sec).padStart(
+            2,
+            "0"
+          )}`;
+        }
+
+        function startSession() {
+          beeper.init();
+          lap = 1;
+          lapEl.textContent = String(lap);
+          setPhase("work");
+          remaining = Number(workSecEl.value);
+          targetLap = Number(loopsEl.value);
+          t0 = performance.now() / 1000;
+          t = 0;
+          running = true;
+          loop();
+        }
+
+        function pauseResume() {
+          if (!running) {
+            running = true;
+            t0 = performance.now() / 1000 - t;
+            loop();
+            return;
+          }
+          running = false;
+          cancelAnimationFrame(rafId);
+          rafId = null;
+        }
+
+        function resetAll() {
+          running = false;
+          cancelAnimationFrame(rafId);
+          rafId = null;
+          setPhase("idle");
+          remaining = 0;
+          countdownEl.textContent = "00:00";
+          lap = 0;
+          lapEl.textContent = "0";
+          t = 0;
+          randomTarget = null;
+          drawFrame(0);
+        }
+
+        function center() {
+          randomTarget = null;
+          currentPos.x = cx;
+          currentPos.y = cy;
+          drawFrame(0);
+        }
+
+        // Main loop
+        let lastTs = 0,
+          dt = 0,
+          randomElapsed = 0;
+        function loop(ts) {
+          rafId = requestAnimationFrame(loop);
+          const now = performance.now() / 1000;
+          t = now - t0;
+          dt = Math.min(0.05, Math.max(0, now - (lastTs || now)));
+          lastTs = now;
+
+          // Update timers
+          remaining -= dt;
+          if (remaining <= 0) {
+            if (phase === "work") {
+              setPhase("rest");
+              remaining = Number(restSecEl.value);
+              if (beepEl.checked) beeper.beep(0.18, 760);
+            } else if (phase === "rest") {
+              if (lap >= targetLap) {
+                // end
+                running = false;
+                cancelAnimationFrame(rafId);
+                rafId = null;
+                setPhase("idle");
+                countdownEl.textContent = "00:00";
+                return;
+              } else {
+                lap++;
+                lapEl.textContent = String(lap);
+                setPhase("work");
+                remaining = Number(workSecEl.value);
+                if (beepEl.checked) beeper.beep(0.12, 980);
+              }
+            }
+          }
+          countdownEl.textContent = formatClock(remaining);
+
+          drawFrame(t);
+        }
+
+        function drawFrame(localTime) {
+          resize(); // keep responsive & crisp
+          drawBackground();
+          currentPos = computePosition(localTime);
+          drawDot(currentPos.x, currentPos.y);
+        }
+
+        // Events
+        startBtn.addEventListener("click", () => {
+          if (phase === "idle" && !running) {
+            startSession();
+          } else {
+            // restart
+            resetAll();
+            startSession();
+          }
+        });
+        pauseBtn.addEventListener("click", pauseResume);
+        resetBtn.addEventListener("click", resetAll);
+        centerBtn.addEventListener("click", center);
+
+        function toggleFullscreen() {
+          const el = document.documentElement;
+          if (!document.fullscreenElement) {
+            el.requestFullscreen?.();
+          } else {
+            document.exitFullscreen?.();
+          }
+        }
+        fullscreenBtn.addEventListener("click", toggleFullscreen);
+
+        // Keyboard shortcuts
+        window.addEventListener("keydown", (e) => {
+          if (e.key === " ") {
+            e.preventDefault();
+            pauseResume();
+          }
+          if (e.key.toLowerCase() === "f") {
+            e.preventDefault();
+            toggleFullscreen();
+          }
+          if (e.key.toLowerCase() === "r") {
+            e.preventDefault();
+            resetAll();
+          }
+        });
+
+        // Live updates: redraw on changes
+        [patternEl, speedEl, ampEl, sizeEl, dotColorEl, bgColorEl].forEach(
+          (el) => {
+            el.addEventListener("input", () => {
+              drawFrame(t);
+            });
+          }
+        );
+
+        // Initial paint
+        drawFrame(0);
+      })();
+    </script>
+  </body>
+</html>
